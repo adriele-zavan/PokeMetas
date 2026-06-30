@@ -1,0 +1,5 @@
+venv/
+.env
+pokemetas.db
+__pycache__/
+*.pyc
