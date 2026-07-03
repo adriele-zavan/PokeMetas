@@ -5,7 +5,8 @@ import os
 from database import criar_tabelas
 
 
-load_dotenv()  # funciona local, ignorado no Railway
+load_dotenv(override=False)  # não sobrescreve variáveis já existentes
+
 TOKEN = os.environ.get("DISCORD_TOKEN") or os.getenv("DISCORD_TOKEN")
 
 TOKEN = os.environ.get("DISCORD_TOKEN") or os.getenv("DISCORD_TOKEN")
