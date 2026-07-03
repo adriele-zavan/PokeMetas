@@ -99,6 +99,17 @@ def buscar_metas_usuario(usuario_id):
     conexao.close()
     return metas
 
+def buscar_meta_por_titulo(usuario_id, titulo):
+    conexao = conectar()
+    cursor = conexao.cursor()
+    cursor.execute("""
+        SELECT * FROM metas_globais
+        WHERE usuario_id = ? AND titulo LIKE ?
+    """, (usuario_id, f"%{titulo}%"))
+    meta = cursor.fetchone()
+    conexao.close()
+    return meta
+
 def salvar_pokemon(dono_id, nome, numero_pokedex, evolucoes):
     conexao = conectar()
     cursor = conexao.cursor()
@@ -134,13 +145,13 @@ def salvar_meta_menor(meta_global_id, titulo, xp_recompensa=30):
     conexao.close()
     return id_gerado
 
-def buscar_meta_por_titulo(usuario_id, titulo):
+def buscar_meta_menor_por_titulo(meta_global_id, titulo):
     conexao = conectar()
     cursor = conexao.cursor()
     cursor.execute("""
-        SELECT * FROM metas_globais
-        WHERE usuario_id = ? AND titulo LIKE ?
-    """, (usuario_id, f"%{titulo}%"))
+        SELECT * FROM metas_menores
+        WHERE meta_global_id = ? AND titulo LIKE ?
+    """, (meta_global_id, f"%{titulo}%"))
     meta = cursor.fetchone()
     conexao.close()
     return meta
@@ -159,7 +170,9 @@ def concluir_meta_menor_db(meta_menor_id):
     conexao = conectar()
     cursor = conexao.cursor()
     cursor.execute("""
-        UPDATE metas_menores SET concluida = 1 WHERE id = ?
+        UPDATE metas_menores 
+        SET concluida = concluida + 1 
+        WHERE id = ?
     """, (meta_menor_id,))
     conexao.commit()
     conexao.close()
@@ -187,18 +200,6 @@ def buscar_pokemon_da_meta(usuario_id, meta_global_id):
     conexao.close()
     return pokemon
 
-def buscar_meta_menor_por_titulo(meta_global_id, titulo):
-    conexao = conectar()
-    cursor = conexao.cursor()
-    cursor.execute("""
-        SELECT * FROM metas_menores
-        WHERE meta_global_id = ? AND titulo LIKE ? AND concluida = 0
-    """, (meta_global_id, f"%{titulo}%"))
-    meta = cursor.fetchone()
-    conexao.close()
-    return meta
-
-
 def vincular_pokemon_meta(meta_id, pokemon_id):
     conexao = conectar()
     cursor = conexao.cursor()
@@ -207,31 +208,23 @@ def vincular_pokemon_meta(meta_id, pokemon_id):
     """, (pokemon_id, meta_id))
     conexao.commit()
     conexao.close()
+
 def deletar_meta(meta_id, usuario_id):
     conexao = conectar()
     cursor = conexao.cursor()
-
-    # Busca o pokemon_id antes de deletar
     cursor.execute("""
         SELECT pokemon_id FROM metas_globais 
         WHERE id = ? AND usuario_id = ?
     """, (meta_id, usuario_id))
     meta = cursor.fetchone()
-
     if meta and meta["pokemon_id"]:
-        # Deleta o pokemon vinculado
         cursor.execute("DELETE FROM pokemons WHERE id = ?", (meta["pokemon_id"],))
-
-    # Deleta as sub-metas
     cursor.execute("DELETE FROM metas_menores WHERE meta_global_id = ?", (meta_id,))
-
-    # Deleta a meta
     cursor.execute("""
         DELETE FROM metas_globais WHERE id = ? AND usuario_id = ?
     """, (meta_id, usuario_id))
-
     conexao.commit()
     conexao.close()
-    
+
 if __name__ == "__main__":
     criar_tabelas()

@@ -116,14 +116,14 @@ class MetasCommands(commands.Cog):
         if not metas:
             await ctx.send("❌ Você não tem nenhuma meta ainda! Use `!criarmeta [titulo]`")
             return
-        embed = discord.Embed(title="📋 Suas Metas", color=discord.Color.blue())
+        embed = discord.Embed(title="𝄞 Suas Metas", color=discord.Color.blue())
         for meta in metas:
             submetas = buscar_metas_menores(meta["id"])
             if submetas:
                 texto_submetas = "\n".join([f"{'✅' if sub['concluida'] else '•'} {sub['titulo']}" for sub in submetas])
             else:
                 texto_submetas = "*Nenhuma submeta criada.*"
-            embed.add_field(name=f"🎯 {meta['titulo']}", value=texto_submetas, inline=False)
+            embed.add_field(name=f"⤿ {meta['titulo']}", value=texto_submetas, inline=False)
         await ctx.send(embed=embed)
 
     @commands.command()
@@ -152,12 +152,17 @@ class MetasCommands(commands.Cog):
         if not sub_meta:
             await ctx.send(f"❌ Sub-meta **'{subtitulo}'** não encontrada ou já concluída!")
             return
+        # Verifica se é a primeira vez ou repetição
+        ja_concluida = sub_meta["concluida"] > 0
+        xp_ganho = 10 if ja_concluida else sub_meta["xp_recompensa"]
         concluir_meta_menor_db(sub_meta["id"])
+
+
         pokemon = buscar_pokemon_da_meta(usuario_id, meta["id"])
         if not pokemon:
             await ctx.send("❌ Nenhum Pokémon encontrado para essa meta!")
             return
-        xp_ganho = sub_meta["xp_recompensa"]
+   
         xp_novo = pokemon["xp_atual"] + xp_ganho
         evolucoes = pokemon["evolucoes"].split(",")
         nivel_atual = pokemon["nivel_evolucao"]
@@ -179,6 +184,9 @@ class MetasCommands(commands.Cog):
         embed = discord.Embed(title="⚡ Sub-meta Concluída!", color=discord.Color.gold())
         embed.set_thumbnail(url=f"https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/{numero_pokedex}.png")
         embed.add_field(name="Sub-meta", value=sub_meta["titulo"], inline=False)
+
+        if ja_concluida:
+            embed.add_field(name="♻️ Repetição", value="XP reduzido por repetição!", inline=False)
         embed.add_field(name="XP Ganho", value=f"+{xp_ganho} XP", inline=True)
         embed.add_field(name="XP Total", value=f"{xp_novo}/{xp_necessario}", inline=True)
         if evoluiu:

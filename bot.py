@@ -5,9 +5,13 @@ import os
 from database import criar_tabelas
 
 
-load_dotenv()
+load_dotenv()  # funciona local, ignorado no Railway
+TOKEN = os.environ.get("DISCORD_TOKEN") or os.getenv("DISCORD_TOKEN")
 
-TOKEN = os.getenv("DISCORD_TOKEN")
+TOKEN = os.environ.get("DISCORD_TOKEN") or os.getenv("DISCORD_TOKEN")
+
+if not TOKEN:
+    raise ValueError("❌ DISCORD_TOKEN não encontrado! Verifique o .env ou as variáveis do Railway.")
 
 
 intents = discord.Intents.default()
